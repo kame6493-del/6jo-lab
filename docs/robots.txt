@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kame6493-del.github.io/6jo-lab/sitemap.xml
