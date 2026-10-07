@@ -1,11 +1,38 @@
-:root{--bg:#faf7f2;--ink:#2d2d34;--sub:#6e6e78;--acc:#2f7d64;--card:#fff;--line:#e6dfd4}
-@media (prefers-color-scheme:dark){:root{--bg:#1d1d20;--ink:#ecebe8;--sub:#a9a8b0;--acc:#6cc4a4;--card:#26262a;--line:#3a3a40}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.85;font-size:17px}
-.wrap{max-width:720px;margin:0 auto;padding:24px 16px 64px}header a{color:var(--ink);text-decoration:none;font-weight:700}
-h1{font-size:1.55rem;line-height:1.5;margin:28px 0 8px}h2{font-size:1.15rem;margin:32px 0 6px;border-left:4px solid var(--acc);padding-left:10px}
-.pr-note{font-size:.82rem;color:var(--sub);border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:12px 0}
-figure{margin:20px 0}figure img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
-.pr{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:14px 0;color:var(--ink);text-decoration:none}
-.pr b{color:var(--acc)}.pr span{display:block;font-size:.85rem;color:var(--sub)}
-ul{padding-left:1.2em}li{margin:6px 0}.list a{display:block;padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
-.list small{display:block;color:var(--sub)}footer{margin-top:48px;font-size:.85rem;color:var(--sub)}footer a{color:var(--sub)}
+:root{--bg:#fff;--ink:#333;--sub:#777;--line:#e8e8e8;--soft:#f7f7f5;--link:#2a6496;--acc:#3e6b57}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1b1b;--ink:#ddd;--sub:#999;--line:#333;--soft:#242424;--link:#8ab4d8;--acc:#86b79f}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,"Yu Gothic",sans-serif;font-size:16px;line-height:1.9;overflow-wrap:anywhere}
+a{color:var(--link)}img{display:block;max-width:100%;height:auto}
+.site{border-bottom:1px solid var(--line)}
+.site .in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.site a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:bold;font-size:1.05rem}
+.site img{width:30px;height:30px;border-radius:50%}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:40px}
+@media (min-width:900px){.wrap{grid-template-columns:minmax(0,1fr) 280px}}
+main{min-width:0;padding:24px 0 40px}
+.intro{font-size:.92rem;color:var(--sub);margin:4px 0 20px}
+.list a{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.list img{width:120px;height:90px;object-fit:cover;object-position:top;border:1px solid var(--line);flex:none}
+.list h2{font-size:1.02rem;line-height:1.6;margin:0 0 4px}
+.list p{font-size:.84rem;color:var(--sub);line-height:1.7;margin:0}
+.list small{font-size:.75rem;color:var(--sub)}
+article h1{font-size:1.5rem;line-height:1.55;margin:4px 0 8px}
+.meta{font-size:.8rem;color:var(--sub);margin:0 0 18px}
+.pr-note{font-size:.78rem;color:var(--sub);background:var(--soft);padding:6px 10px;margin:0 0 20px}
+article figure{margin:0 0 28px}
+article figure img{border:1px solid var(--line);max-height:860px;width:auto}
+article p{margin:0 0 1.4em}
+.items{margin:32px 0 0;background:var(--soft);padding:14px 16px}
+.items h2{font-size:.95rem;margin:0 0 6px}
+.items li{margin:6px 0;font-size:.93rem}
+.items ul{margin:0;padding-left:1.1em}
+.related{margin-top:40px}
+.related h2{font-size:1rem;border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0}
+aside{padding:24px 0 40px}
+.box{border:1px solid var(--line);padding:16px;font-size:.85rem;line-height:1.8}
+.box img{width:64px;height:64px;border-radius:50%;margin:0 0 8px}
+.box b{display:block;font-size:.95rem;margin-bottom:4px}
+.box p{margin:0 0 8px;color:var(--sub)}
+footer{border-top:1px solid var(--line);font-size:.75rem;color:var(--sub)}
+footer .in{max-width:1080px;margin:0 auto;padding:20px 16px 32px;line-height:1.8}
+footer a{color:var(--sub)}

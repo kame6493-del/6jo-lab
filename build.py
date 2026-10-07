@@ -1,179 +1,195 @@
-# 6畳ラボのサイトを作る。pages の中身から HTML を書き出し、図を縮小して img/ に置く。
+# 6畳ラボのサイトを作る。articles の中身から HTML を書き出し、図を縮小して img/ に置く。
 import os, html, datetime
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "docs")
 PINS = os.path.join(os.path.dirname(ROOT), "pins")
+ICON = os.path.join(os.path.dirname(ROOT), "icon_6jolab_room.png")
 BASE = "https://kame6493-del.github.io/6jo-lab/"
-TODAY = datetime.date.today().isoformat()
+TODAY = datetime.date.today()
 ROOM = "https://room.rakuten.co.jp/room_1c124220fb/items"
 
 os.makedirs(os.path.join(OUT, "img"), exist_ok=True)
 
-def img(src, name):
+def save_images(src, slug):
     im = Image.open(os.path.join(PINS, src)).convert("RGB")
-    im.thumbnail((800, 1200))
-    im.save(os.path.join(OUT, "img", name), "JPEG", quality=84, optimize=True)
-    return "img/" + name
+    full = im.copy(); full.thumbnail((900, 1350))
+    full.save(os.path.join(OUT, "img", slug + ".jpg"), "JPEG", quality=85, optimize=True)
+    w, h = im.size
+    th = im.crop((0, 0, w, int(w * 0.72))); th.thumbnail((640, 460))
+    th.save(os.path.join(OUT, "img", slug + "-thumb.jpg"), "JPEG", quality=82, optimize=True)
 
-# 本文は (種類, 中身) の並び。p=段落 h=小見出し ul=箇条書き(リスト) pr=PRリンク(文, URL)
-pages = [
-  dict(slug="rug-size", pin="pin_6jo_rug.png",
-    title="6畳に合うラグの大きさは？ベッドあり・なしで変わる目安",
-    desc="6畳の部屋に置くラグの大きさの目安。ベッドがある部屋は130×185cm、ベッドがない部屋は185×185cm。床を少し残すと部屋が広く見えます。",
+if os.path.exists(ICON):
+    ic = Image.open(ICON).convert("RGB"); ic.thumbnail((96, 96)); ic.save(os.path.join(OUT, "img", "icon.png"))
+
+# 本文: 文字列は段落、("h", 見出し)は小見出し。pr は (説明, URL) の並び
+articles = [
+  dict(slug="rug-size", pin="pin_6jo_rug.png", tag="ラグ",
+    title="6畳のラグ、何cmにするか問題",
+    lede="ラグって、色より先に大きさで失敗するんですよね。",
+    desc="6畳に置くラグの大きさの目安。ベッドがある部屋なら130×185cm前後、ベッドがない部屋なら185×185cm前後。床を少し残すと広く見えます。",
     body=[
-      ("p", "ラグを選ぶとき、色や素材より先に決めておきたいのが大きさです。大きさが決まれば、あとは色と毛足を比べるだけになります。"),
-      ("h", "迷ったらこの2つ"),
-      ("ul", ["ベッドを置いている6畳なら、130×185cm前後(約1.5畳)。ベッドの横の床に敷くのにちょうどいい大きさです。",
-              "ベッドを置かない6畳なら、185×185cm前後(約2畳)。ローテーブルを置いて、座る場所ごと敷けます。"]),
-      ("h", "床を全部隠さない"),
-      ("p", "6畳の床をほとんど覆うような大きいラグにすると、かえって部屋が狭く見えます。ラグの周りに床が少し見えているくらいが、部屋の広さが伝わりやすいです。"),
-      ("p", "測るときは、ベッドや机の脚がラグに乗るかどうかも見ておくと、置いてからのずれが減ります。"),
-      ("h", "冬は洗えるかどうかも"),
-      ("p", "一人暮らしの部屋はラグの上で過ごす時間が長く、汚れやすいです。洗濯機で洗えるか、ホットカーペットの上に敷けるかを先に条件に入れておくと、長く使えるものを選びやすくなります。"),
-      ("pr", "図の大きさ(130×185cm・185×185cm)があり、洗えるラグ", "https://a.r10.to/hFh9P3"),
-    ]),
-  dict(slug="curtain-size", pin="pin_curtain.png",
-    title="カーテンのサイズの測り方｜測るのは窓ではなくレール",
-    desc="カーテンの幅はレールの長さ×1.05、丈は掃き出し窓ならランナーの下から床まで−1cm、腰窓なら窓枠の下+15〜20cm。冬の冷気を防ぐ測り方。",
+      "6畳の部屋に置くなら、目安はわりとはっきりしていて、ベッドがある部屋なら130×185cmくらい(約1.5畳)、ベッドがない部屋なら185×185cmくらい(約2畳)です。",
+      "ベッドがあると、床で自由に使えるのはベッドの横のひと区画くらいになります。そこに収まるのが130×185cm。ベッドを置かずにローテーブルで暮らすなら、座る場所ごと敷ける185×185cmがちょうどいい大きさです。",
+      "やりがちなのが、床が見えなくなるくらい大きいものを選んでしまうこと。6畳だと、ラグのまわりに床が少し見えているほうが部屋は広く見えます。図の200×250cmになると、6畳ではほとんど床が埋まってしまいます。",
+      "置く前に、床にマスキングテープで大きさを貼ってみるのがおすすめです。ベッドや机の脚がどこに乗るかも、そこで分かります。",
+      "冬に使うなら、洗えるかどうかも見ておきたいところです。ラグの上で食べたり寝転んだりする時間は長いので、洗濯機に入るかどうかで、何年使えるかが変わってきます。",
+    ],
+    pr=[("130×185cmと185×185cmがあって、洗えるフランネルのラグ", "https://a.r10.to/hFh9P3")]),
+  dict(slug="curtain-size", pin="pin_curtain.png", tag="カーテン",
+    title="カーテンは、窓じゃなくてレールを測る",
+    lede="窓を測って買ったら、届いたカーテンが短かった。よくある失敗です。",
+    desc="カーテンの幅はレールの固定ランナーの間×1.05、丈は掃き出し窓ならランナーの下から床まで−1cm、腰窓なら窓枠の下+15〜20cm。",
     body=[
-      ("p", "カーテンを買う前に測るのは、窓の大きさではなくカーテンレールです。窓だけ測って買うと、幅が足りずに端がすいたり、丈が短くて光がもれたりします。"),
-      ("h", "幅"),
-      ("p", "レールの両端にある固定ランナー(動かない輪)の間を測り、1.05倍にします。少しゆとりがあると、閉めたときに端がすきません。両開きにするなら、その半分の幅を2枚です。"),
-      ("h", "丈"),
-      ("ul", ["掃き出し窓は、ランナー(フックを掛ける輪)の下から床までを測って、1cm引きます。床に付くと裾が汚れやすく、短すぎると下から光がもれます。",
-              "腰窓は、ランナーの下から窓枠の下までを測って、15〜20cm足します。窓枠より下まで隠れると、すき間風と光もれが減ります。"]),
-      ("h", "冬は少し長めが安心"),
-      ("p", "窓のガラスで冷えた空気は、下へ落ちてきます。丈が短いと、その冷気がカーテンの下から部屋に入りやすくなります。腰窓は少し長めにしておくと、足元の冷えがやわらぎます。"),
-      ("pr", "丈は1cm単位・幅は5cm単位で頼める1級遮光カーテン(日本製・洗える)", "https://a.r10.to/hPsggJ"),
-    ]),
-  dict(slug="winter-futon", pin="pin_fuyu_futon.png",
-    title="冬の布団、何を足すと暖かい？一人暮らしの寝具は下から",
-    desc="冬の寝具を足す順番の目安。まず敷きパッドを冬用に、次に掛け布団と体の間に毛布、それでも寒ければ掛け布団を冬用に。床が冷える6畳の部屋向け。",
+      "カーテンの寸法は、窓ではなくレールが基準になります。幅は、レールの両端にある動かない輪(固定ランナー)の間を測って、1.05倍。少しゆとりを持たせないと、閉めたときに端がすいてしまいます。両開きなら、その半分の幅を2枚です。",
+      "丈は、窓の形で測り方が変わります。床まである掃き出し窓なら、ランナー(フックを掛ける輪)の下から床までを測って、1cm引きます。床に付くと裾が汚れやすいし、短いと下から光がもれます。",
+      "腰の高さの窓なら、ランナーの下から窓枠の下までを測って、15〜20cm足します。窓枠より下まで隠れるようにしておくと、すき間風も光もれも減ります。",
+      "冬のことを考えるなら、腰窓は気持ち長めがいいと思います。窓で冷えた空気は下へ落ちてくるので、丈が短いと、そのまま部屋に入ってきてしまうんです。",
+    ],
+    pr=[("丈は1cm単位、幅は5cm単位で頼める1級遮光カーテン(日本製・洗える)", "https://a.r10.to/hPsggJ")]),
+  dict(slug="winter-futon", pin="pin_fuyu_futon.png", tag="寝具",
+    title="冬の布団が寒いとき、足すのは下から",
+    lede="布団が寒いと掛け布団を厚くしたくなるんですが、寒さは下から来ていることが多いんです。",
+    desc="冬の寝具は下から足すのが目安。敷きパッドを冬用に、掛け布団と体の間に毛布、それでも寒ければ掛け布団を冬用に。",
     body=[
-      ("p", "冬に布団が寒いと、まず掛け布団を厚くしたくなります。でも寒さは、体の下から来ていることが多いです。"),
-      ("h", "足す順番の目安"),
-      ("ul", ["敷きパッドを冬用(起毛のもの)に替える",
-              "掛け布団と体の間に毛布を1枚入れる",
-              "それでも寒ければ、掛け布団を冬用にする"]),
-      ("p", "敷き布団やマットレスは、床の冷たさを直接受けます。下を先に暖かくすると、同じ掛け布団でも寒さの感じ方が変わります。"),
-      ("h", "床に寝ている人は特に"),
-      ("p", "ベッドを置かずに布団やマットレスを床に敷いている6畳では、床からの冷えが強くなります。ラグを1枚敷くだけでも、冷たさがやわらぎます。"),
-      ("pr", "冬用の敷きパッド(洗濯機で洗える・シングルから)", "https://a.r10.to/hgGfzM"),
-      ("pr", "洗濯機で洗えて、シングルからある毛布", "https://a.r10.to/hFOvgm"),
-    ]),
-  dict(slug="moufu", pin="pin_moufu.png",
-    title="毛布を選ぶ前に見る3つ｜サイズ・洗えるか・素材",
-    desc="毛布を選ぶときに見るのは、洗濯機で洗えるか、サイズ(シングルは140×200cm前後)、素材の3つ。一人暮らしなら洗えるかどうかが一番大事。",
+      "敷き布団やマットレスは、床の冷たさを直接受けています。なので、足していく順番は、まず敷きパッドを起毛の冬用に替えるところから。次に、掛け布団と体のあいだに毛布を1枚。それでも寒ければ、そこで初めて掛け布団を冬用にします。",
+      "下を先に暖かくしておくと、同じ掛け布団でも寒さの感じ方がかなり変わります。",
+      "6畳でベッドを置かず、床に布団を敷いて寝ている人は、床からの冷えがさらに強くなります。布団の下にラグを1枚敷いておくだけでも、冷たさはやわらぎます。",
+    ],
+    pr=[("冬用の敷きパッド。洗濯機で洗えて、シングルからある", "https://a.r10.to/hgGfzM"),
+        ("洗濯機で洗えて、シングルからある毛布", "https://a.r10.to/hFOvgm")]),
+  dict(slug="moufu", pin="pin_moufu.png", tag="寝具",
+    title="毛布を選ぶなら、まず洗えるかどうか",
+    lede="毛布って種類が多くて、どれも暖かそうに見えるんですよね。",
+    desc="毛布を選ぶときは、洗濯機で洗えるか、サイズ(シングルは140×200cm前後)、素材の順に見ると絞れます。",
     body=[
-      ("p", "毛布は種類が多く、どれも暖かそうに見えます。迷ったら、次の3つを順に見ていくと絞れます。"),
-      ("h", "1. 洗濯機で洗えるか"),
-      ("p", "一人暮らしでは、大きな寝具をクリーニングに出す手間が続きません。洗濯機で洗えるものを選んでおくと、汚れを気にせず使えます。洗濯表示で、桶のマークに×が付いていないかを見ておきます。"),
-      ("h", "2. サイズ"),
-      ("p", "シングルの毛布は140×200cm前後が多いです。ベッドの幅より少し大きいと、寝返りをしてもはみ出しにくくなります。"),
-      ("h", "3. 素材"),
-      ("p", "ふわっとした手触りのものは、ポリエステルのマイクロファイバー系が多いです。軽くて乾きやすいのも、一人暮らしには助かるところです。"),
-      ("pr", "洗濯機で洗えて、シングル・セミダブル・ダブルがある毛布", "https://a.r10.to/hFOvgm"),
-    ]),
-  dict(slug="mattress", pin="pin_mattress.png",
-    title="マットレスを床に直置きするなら｜気をつけるのは湿気",
-    desc="6畳でベッドを置かずにマットレスを床に置くなら、気をつけるのは下にこもる湿気。すのこを挟む、三つ折りを朝たたんで立てる、の2つが手軽です。",
+      "一人暮らしなら、最初に見るのは洗濯機で洗えるかどうかだと思います。大きな寝具を毎回クリーニングに出すのは、正直なかなか続きません。洗濯表示で、桶のマークに×が付いていなければ、家で洗えます。",
+      "サイズは、シングルなら140×200cm前後が多いです。ベッドの幅より少し大きいと、寝返りをしてもはみ出しにくくなります。",
+      "素材は手触りの好みですが、ふわっとしたものはポリエステルのマイクロファイバー系が多いです。軽くて乾きやすいので、洗う前提ならこれが楽です。",
+    ],
+    pr=[("洗濯機で洗えて、シングル・セミダブル・ダブルがある毛布", "https://a.r10.to/hFOvgm")]),
+  dict(slug="mattress", pin="pin_mattress.png", tag="寝具",
+    title="マットレスを床に直置きするなら、湿気だけは気にしておく",
+    lede="ベッドを置かないと、6畳でも床がかなり空きます。そのかわり気になるのが湿気です。",
+    desc="6畳でマットレスを床に直置きするなら、下にこもる湿気に注意。すのこを挟む、三つ折りを朝たたんで立てる、の組み合わせが手軽です。",
     body=[
-      ("p", "6畳の部屋では、ベッドを置かずにマットレスや布団を床に敷く人も多いです。床が空くのはいいところですが、気をつけたいのが湿気です。"),
-      ("h", "下に汗がたまりやすい"),
-      ("p", "寝ている間の汗は下へ抜けにくく、床とマットレスの間にこもりやすいです。敷いたままにしておくと、乾く時間がありません。"),
-      ("h", "手軽な対策は2つ"),
-      ("ul", ["すのこを1枚挟む。すき間から空気が通って、湿気が抜けやすくなります。",
-              "三つ折りのマットレスなら、朝たたんで立てておく。床が空いて、マットレスの下も乾きます。"]),
-      ("p", "ベッドを置かない6畳なら、この2つの組み合わせが手軽です。"),
-      ("pr", "三つ折りで、シングルは97×195cm・厚さ10cmと5cm、カバーを外して洗えるマットレス", "https://a.r10.to/hgCsYc"),
-    ]),
-  dict(slug="mado-reiki", pin="pin_mado_reiki.png",
-    title="冬の窓際が寒い理由と、賃貸でもできる3つの対策",
-    desc="冬に窓際が寒いのは、ガラスで冷えた空気が床へ落ちてくるから。カーテンを床まで、窓の下に断熱パネル、寝る場所を窓から離す。賃貸でもできる対策。",
+      "寝ている間の汗は、下へ抜けにくいんです。床とマットレスのあいだにこもって、敷きっぱなしだと乾く時間がありません。",
+      "手軽なのは、すのこを1枚挟むこと。すき間から空気が通るので、湿気が抜けやすくなります。",
+      "三つ折りのマットレスなら、朝たたんで立てておくのもいいです。床が空くし、マットレスの下も乾く。掃除もしやすくなります。ベッドなしの6畳だと、この2つを組み合わせるのがいちばん手軽だと思います。",
+    ],
+    pr=[("三つ折りで、シングルは97×195cm。厚さは10cmと5cm、カバーを外して洗える", "https://a.r10.to/hgCsYc")]),
+  dict(slug="mado-reiki", pin="pin_mado_reiki.png", tag="冬支度",
+    title="冬の窓際が寒いのは、冷気が落ちてくるから",
+    lede="窓の近くにいると、足元だけすうっと冷える。あれにはちゃんと理由があります。",
+    desc="冬に窓際が寒いのは、ガラスで冷えた空気が床へ落ちてくるから。カーテンの丈、断熱パネル、寝る場所の位置で、賃貸でも対策できます。",
     body=[
-      ("p", "冬、窓の近くにいると足元がすうっと冷えます。これは、窓のガラスで冷やされた空気が重くなり、窓に沿って下へ落ち、床を伝って部屋に広がるからです。"),
-      ("h", "賃貸でもできる3つ"),
-      ("ul", ["カーテンを床まで届く長さにする。下のすき間から冷気が出にくくなります。",
-              "窓の下に断熱パネルを立てる。置くだけのものや、はがせるものなら原状回復の心配が少ないです。",
-              "寝る場所を窓から少し離す。冷気が流れてくる通り道をよけられます。"]),
-      ("p", "6畳の部屋は窓とベッドが近くなりがちです。家具の配置を考えるときに、窓からの距離も入れておくと冬が楽になります。"),
-      ("pr", "6畳の冬支度(毛布・布団・ラグ)をまとめた楽天ROOM", "https://room.rakuten.co.jp/room_1c124220fb/collection/1800012748397273"),
-    ]),
-  dict(slug="taikyo", pin="pin_taikyo.png",
-    title="退去費用、どこまで自分の負担？国交省ガイドラインの分け方",
-    desc="国交省の原状回復ガイドラインでは、家具の跡や画びょうの穴、日焼けはふつうに暮らしてできたもの。タバコのヤニやネジ穴、放置したカビは借りた人の負担になりやすい。",
+      "窓のガラスで冷やされた空気は、重くなって窓に沿って下へ落ちます。それが床を這って部屋に広がるので、足元から冷えるんです。",
+      "賃貸でもできることでいうと、まずカーテンを床まで届く長さにすること。下のすき間から冷気が出にくくなります。窓の下に断熱パネルを立てるのも効きます。置くだけのものや、はがせるものなら、原状回復の心配も少なくて済みます。",
+      "地味に効くのが、寝る場所を窓から少し離すことです。6畳だとベッドと窓が近くなりがちなので、配置を考えるときに窓との距離も入れておくと、冬がだいぶ楽になります。",
+    ],
+    pr=[("6畳の冬支度に使える毛布・布団・ラグをまとめた楽天ROOM", "https://room.rakuten.co.jp/room_1c124220fb/collection/1800012748397273")]),
+  dict(slug="taikyo", pin="pin_taikyo.png", tag="賃貸",
+    title="退去費用、どこまで払うのか",
+    lede="賃貸を出るときに気になるのが、どこまでが自分の負担になるのか、ですよね。",
+    desc="国交省の原状回復ガイドラインでは、家具の跡や画びょうの穴、日焼けはふつうに暮らしてできたもの。ネジ穴やタバコのヤニは借りた人の負担になりやすい。",
     body=[
-      ("p", "賃貸を出るときの退去費用。どこまでが自分の負担なのかは、国土交通省の「原状回復をめぐるトラブルとガイドライン」がひとつの目安になります。"),
-      ("h", "ふつうに暮らしてできたもの"),
-      ("p", "家具を置いていた床のへこみ、画びょうやピンの穴、日焼けによる壁紙の色あせなどは、ふつうに暮らしていてできるものとして扱われています。"),
-      ("h", "借りた人の負担になりやすいもの"),
-      ("p", "タバコのヤニや臭い、壁に開けたネジ穴、手入れをせずに広がったカビなどは、借りた人の負担になりやすいとされています。"),
-      ("h", "迷ったら、穴を残しにくい物を"),
-      ("p", "棚や収納を壁に付けるなら、ネジではなくピンで留めるものや、突っ張り式のものを選んでおくと安心です。契約書に特約が書かれていることもあるので、先に確かめておきます。"),
-      ("p", "入居した日に、床や壁の傷を日付が残る形で写真に撮っておくと、退去のときに説明しやすくなります。"),
-      ("pr", "ピンや突っ張りで付けられる、壁に穴を残しにくい収納をまとめた楽天ROOM", "https://room.rakuten.co.jp/room_1c124220fb/collection/1800012748348292"),
-    ]),
+      "ひとつの目安になるのが、国土交通省の「原状回復をめぐるトラブルとガイドライン」です。",
+      "家具を置いていた床のへこみ、画びょうやピンの穴、日焼けによる壁紙の色あせ。こういうものは、ふつうに暮らしていればできるものとして扱われています。",
+      "逆に、タバコのヤニや臭い、壁に開けたネジ穴、手入れをせずに広がったカビなどは、借りた人の負担になりやすいとされています。",
+      "なので、棚や収納を壁に付けるなら、ネジではなくピンで留めるものか、突っ張り式のものにしておくと安心です。ただ、契約書に特約が書かれていることもあるので、そこは先に確かめておいてください。",
+      "それと、入居した日に床や壁の傷を写真に撮っておくと、退去のときに説明しやすくなります。今からでも、これから付く傷との区別には使えます。",
+    ],
+    pr=[("ピンや突っ張りで付けられる、壁に穴を残しにくい収納をまとめた楽天ROOM", "https://room.rakuten.co.jp/room_1c124220fb/collection/1800012748348292")]),
 ]
 
-CSS = """:root{--bg:#faf7f2;--ink:#2d2d34;--sub:#6e6e78;--acc:#2f7d64;--card:#fff;--line:#e6dfd4}
-@media (prefers-color-scheme:dark){:root{--bg:#1d1d20;--ink:#ecebe8;--sub:#a9a8b0;--acc:#6cc4a4;--card:#26262a;--line:#3a3a40}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.85;font-size:17px}
-.wrap{max-width:720px;margin:0 auto;padding:24px 16px 64px}header a{color:var(--ink);text-decoration:none;font-weight:700}
-h1{font-size:1.55rem;line-height:1.5;margin:28px 0 8px}h2{font-size:1.15rem;margin:32px 0 6px;border-left:4px solid var(--acc);padding-left:10px}
-.pr-note{font-size:.82rem;color:var(--sub);border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:12px 0}
-figure{margin:20px 0}figure img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
-.pr{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:14px 0;color:var(--ink);text-decoration:none}
-.pr b{color:var(--acc)}.pr span{display:block;font-size:.85rem;color:var(--sub)}
-ul{padding-left:1.2em}li{margin:6px 0}.list a{display:block;padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
-.list small{display:block;color:var(--sub)}footer{margin-top:48px;font-size:.85rem;color:var(--sub)}footer a{color:var(--sub)}"""
+CSS = """:root{--bg:#fff;--ink:#333;--sub:#777;--line:#e8e8e8;--soft:#f7f7f5;--link:#2a6496;--acc:#3e6b57}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1b1b;--ink:#ddd;--sub:#999;--line:#333;--soft:#242424;--link:#8ab4d8;--acc:#86b79f}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,"Yu Gothic",sans-serif;font-size:16px;line-height:1.9;overflow-wrap:anywhere}
+a{color:var(--link)}img{display:block;max-width:100%;height:auto}
+.site{border-bottom:1px solid var(--line)}
+.site .in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.site a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:bold;font-size:1.05rem}
+.site img{width:30px;height:30px;border-radius:50%}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:40px}
+@media (min-width:900px){.wrap{grid-template-columns:minmax(0,1fr) 280px}}
+main{min-width:0;padding:24px 0 40px}
+.intro{font-size:.92rem;color:var(--sub);margin:4px 0 20px}
+.list a{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.list img{width:120px;height:90px;object-fit:cover;object-position:top;border:1px solid var(--line);flex:none}
+.list h2{font-size:1.02rem;line-height:1.6;margin:0 0 4px}
+.list p{font-size:.84rem;color:var(--sub);line-height:1.7;margin:0}
+.list small{font-size:.75rem;color:var(--sub)}
+article h1{font-size:1.5rem;line-height:1.55;margin:4px 0 8px}
+.meta{font-size:.8rem;color:var(--sub);margin:0 0 18px}
+.pr-note{font-size:.78rem;color:var(--sub);background:var(--soft);padding:6px 10px;margin:0 0 20px}
+article figure{margin:0 0 28px}
+article figure img{border:1px solid var(--line);max-height:860px;width:auto}
+article p{margin:0 0 1.4em}
+.items{margin:32px 0 0;background:var(--soft);padding:14px 16px}
+.items h2{font-size:.95rem;margin:0 0 6px}
+.items li{margin:6px 0;font-size:.93rem}
+.items ul{margin:0;padding-left:1.1em}
+.related{margin-top:40px}
+.related h2{font-size:1rem;border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0}
+aside{padding:24px 0 40px}
+.box{border:1px solid var(--line);padding:16px;font-size:.85rem;line-height:1.8}
+.box img{width:64px;height:64px;border-radius:50%;margin:0 0 8px}
+.box b{display:block;font-size:.95rem;margin-bottom:4px}
+.box p{margin:0 0 8px;color:var(--sub)}
+footer{border-top:1px solid var(--line);font-size:.75rem;color:var(--sub)}
+footer .in{max-width:1080px;margin:0 auto;padding:20px 16px 32px;line-height:1.8}
+footer a{color:var(--sub)}"""
 
-def head(title, desc, url, image):
+def page(title, desc, url, image, inner, kind="article"):
     t = html.escape(title); d = html.escape(desc)
-    return f"""<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    return f"""<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{t}</title><meta name="description" content="{d}"><link rel="canonical" href="{url}">
-<meta property="og:title" content="{t}"><meta property="og:description" content="{d}"><meta property="og:type" content="article"><meta property="og:url" content="{url}"><meta property="og:image" content="{image}">
-<meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="style.css"></head><body><div class="wrap">
-<header><a href="./">6畳ラボ｜賃貸の部屋づくり</a></header>"""
+<meta property="og:site_name" content="6畳ラボ"><meta property="og:title" content="{t}"><meta property="og:description" content="{d}"><meta property="og:type" content="{kind}"><meta property="og:url" content="{url}"><meta property="og:image" content="{image}">
+<meta name="twitter:card" content="summary_large_image"><link rel="icon" href="img/icon.png"><link rel="stylesheet" href="style.css"></head>
+<body><div class="site"><div class="in"><a href="./"><img src="img/icon.png" alt="">6畳ラボ</a></div></div>
+<div class="wrap">{inner}
+<aside><div class="box"><img src="img/icon.png" alt=""><b>6畳ラボ</b><p>6畳・ワンルームの賃貸の部屋づくりを、寸法と図でまとめています。ラグやカーテン、冬の寝具など、買う前に測っておきたいところが中心です。</p><p>紹介している商品は<a href="{ROOM}">楽天ROOM</a>にもまとめています。</p></div></aside></div>
+<footer><div class="in">当サイトは楽天アフィリエイトに参加しています。【PR】の付いたリンクから商品が購入されると、当サイトに紹介料が入ることがあります。価格や在庫はリンク先でご確認ください。<br>© 6畳ラボ</div></footer>
+</body></html>"""
 
-FOOT = f"""<footer><p>6畳ラボは、6畳・ワンルームの賃貸で暮らす人向けに、寸法と置き方を図でまとめています。商品の紹介は<a href="{ROOM}">楽天ROOM</a>にもあります。</p>
-<p>このサイトは楽天アフィリエイトに参加しています。【PR】と書いたリンクから商品が購入されると、紹介料を受け取ることがあります。価格や在庫はリンク先でご確認ください。</p></footer></div></body></html>"""
+def row(a):
+    return (f'<a href="{a["slug"]}.html"><img src="img/{a["slug"]}-thumb.jpg" alt="" loading="lazy" width="120" height="90">'
+            f'<div><h2>{html.escape(a["title"])}</h2><p>{html.escape(a["lede"])}</p><small>{html.escape(a["tag"])}</small></div></a>')
 
-def render(p):
-    url = BASE + p["slug"] + ".html"
-    im = img(p["pin"], p["slug"] + ".jpg")
-    out = [head(p["title"], p["desc"], url, BASE + im), f"<h1>{html.escape(p['title'])}</h1>",
-           '<p class="pr-note">このページには楽天アフィリエイトのリンク(【PR】)が含まれています。</p>',
-           f'<figure><img src="{im}" alt="{html.escape(p["title"])}の図" width="800" height="1200" loading="eager"></figure>']
-    for item in p["body"]:
-        kind, v = item[0], (item[1] if len(item) == 2 else item[1:])
-        if kind == "p": out.append(f"<p>{html.escape(v)}</p>")
-        elif kind == "h": out.append(f"<h2>{html.escape(v)}</h2>")
-        elif kind == "ul": out.append("<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in v) + "</ul>")
-        elif kind == "pr":
-            text, link = v
-            out.append(f'<a class="pr" href="{link}" rel="sponsored noopener" target="_blank"><b>【PR】</b>{html.escape(text)}<span>楽天で見る →</span></a>')
-    others = [q for q in pages if q is not p][:3]
-    out.append("<h2>ほかの図</h2><div class=\"list\">" + "".join(f'<a href="{q["slug"]}.html">{html.escape(q["title"])}</a>' for q in others) + "</div>")
-    out.append(FOOT)
-    with open(os.path.join(OUT, p["slug"] + ".html"), "w", encoding="utf-8") as f:
-        f.write("\n".join(out))
-    return url
+urls = []
+date = f"{TODAY.year}年{TODAY.month}月{TODAY.day}日"
+for i, a in enumerate(articles):
+    save_images(a["pin"], a["slug"])
+    url = BASE + a["slug"] + ".html"; urls.append(url)
+    body = f"<p>{html.escape(a['lede'])}</p>" + "".join(f"<h2>{html.escape(x[1])}</h2>" if isinstance(x, tuple) else f"<p>{html.escape(x)}</p>" for x in a["body"])
+    items = "".join(f'<li>【PR】<a href="{u}" rel="sponsored noopener" target="_blank">{html.escape(s)}</a>(楽天市場)</li>' for s, u in a["pr"])
+    others = [b for b in articles if b is not a]
+    others = (others[i:] + others[:i])[:3]
+    inner = f"""<main><article>
+<h1>{html.escape(a["title"])}</h1>
+<p class="meta">{date} ・ {html.escape(a["tag"])}</p>
+<p class="pr-note">この記事には楽天アフィリエイトのリンクが含まれています。</p>
+<figure><img src="img/{a["slug"]}.jpg" alt="{html.escape(a["title"])}" width="900" height="1350"></figure>
+{body}
+<div class="items"><h2>紹介した商品</h2><ul>{items}</ul></div>
+</article>
+<section class="related"><h2>ほかの記事</h2><div class="list">{"".join(row(b) for b in others)}</div></section></main>"""
+    with open(os.path.join(OUT, a["slug"] + ".html"), "w", encoding="utf-8") as f:
+        f.write(page(a["title"] + " - 6畳ラボ", a["desc"], url, BASE + "img/" + a["slug"] + ".jpg", inner))
 
-urls = [render(p) for p in pages]
-idx = [head("6畳ラボ｜6畳・ワンルームの賃貸の部屋づくり", "6畳・ワンルームの賃貸で暮らす人向けに、ラグやカーテンの大きさ、冬の寝具、退去費用まで、寸法と置き方を図でまとめています。", BASE, BASE + "img/rug-size.jpg"),
-       "<h1>6畳・ワンルームの部屋づくりを、図で</h1>",
-       "<p>6畳の部屋は、物を1つ置くだけで広さが変わります。ここでは、買う前に知っておきたい寸法と置き方を、自分で描いた図でまとめています。</p>",
-       '<div class="list">' + "".join(f'<a href="{p["slug"]}.html">{html.escape(p["title"])}<small>{html.escape(p["desc"][:60])}…</small></a>' for p in pages) + "</div>", FOOT]
+index_inner = f"""<main><p class="intro">6畳・ワンルームの賃貸の部屋づくりを、寸法と図でまとめています。</p>
+<div class="list">{"".join(row(a) for a in articles)}</div></main>"""
 with open(os.path.join(OUT, "index.html"), "w", encoding="utf-8") as f:
-    f.write("\n".join(idx))
+    f.write(page("6畳ラボ - 6畳・ワンルームの賃貸の部屋づくり", "6畳・ワンルームの賃貸で暮らす人に向けて、ラグやカーテンの大きさ、冬の寝具、退去費用まで、買う前に知っておきたい寸法と置き方を図にしています。", BASE, BASE + "img/rug-size.jpg", index_inner, "website"))
 with open(os.path.join(OUT, "style.css"), "w", encoding="utf-8") as f:
     f.write(CSS)
 with open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8") as f:
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-            "".join(f"<url><loc>{u}</loc><lastmod>{TODAY}</lastmod></url>\n" for u in [BASE] + urls) + "</urlset>\n")
+            "".join(f"<url><loc>{u}</loc><lastmod>{TODAY.isoformat()}</lastmod></url>\n" for u in [BASE] + urls) + "</urlset>\n")
 with open(os.path.join(OUT, "robots.txt"), "w", encoding="utf-8") as f:
     f.write(f"User-agent: *\nAllow: /\nSitemap: {BASE}sitemap.xml\n")
 open(os.path.join(OUT, ".nojekyll"), "w").close()
-print(len(urls), "pages")
+print(len(urls), "articles")
